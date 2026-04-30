@@ -1,0 +1,30 @@
+installation:
+  version: 6.5.0
+  installDate: 2026-04-28T21:13:42.187Z
+  lastUpdated: 2026-04-28T21:13:42.187Z
+modules:
+  - name: core
+    version: 6.5.0
+    installDate: 2026-04-28T21:13:41.712Z
+    lastUpdated: 2026-04-28T21:13:42.046Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmm
+    version: 6.5.0
+    installDate: 2026-04-28T21:13:41.661Z
+    lastUpdated: 2026-04-28T21:13:42.048Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmb
+    version: v1.7.0
+    installDate: 2026-04-28T21:13:41.978Z
+    lastUpdated: 2026-04-28T21:13:42.187Z
+    source: external
+    npmPackage: bmad-builder
+    repoUrl: https://github.com/bmad-code-org/bmad-builder
+    channel: stable
+    sha: 86033fc9aeae2ca6d52c7cdb675c1f4bf17fc1c1
+ides:
+  - claude-code

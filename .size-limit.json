@@ -1,0 +1,14 @@
+[
+	{
+		"name": "initial JS bundle",
+		"path": [
+			"build/_app/immutable/entry/*.js",
+			"build/_app/immutable/chunks/*.js",
+			"build/_app/immutable/nodes/0.*.js",
+			"build/_app/immutable/nodes/1.*.js",
+			"build/_app/immutable/nodes/2.*.js"
+		],
+		"limit": "150 KB",
+		"gzip": true
+	}
+]
