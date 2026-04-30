@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Template } from '$lib/schemas/template';
 
 const gotoMock = vi.fn();
+const { loadRunSummariesMock, getRunSummaryMock } = vi.hoisted(() => ({
+	loadRunSummariesMock: vi.fn().mockResolvedValue(undefined),
+	getRunSummaryMock: vi.fn().mockReturnValue(undefined)
+}));
 let templatesState: Template[] = [];
 
 vi.mock('$app/navigation', () => ({
@@ -12,8 +16,13 @@ vi.mock('$app/navigation', () => ({
 vi.mock('$app/paths', () => ({
 	resolve: (p: string) => p
 }));
+vi.mock('$app/environment', () => ({ browser: false }));
 vi.mock('$lib/state/template-store.svelte', () => ({
 	getTemplates: () => templatesState
+}));
+vi.mock('$lib/state/run-store.svelte', () => ({
+	loadRunSummaries: loadRunSummariesMock,
+	getRunSummary: getRunSummaryMock
 }));
 
 import Page from './+page.svelte';
@@ -31,6 +40,8 @@ function makeTemplate(overrides: Partial<Template> = {}): Template {
 
 beforeEach(() => {
 	gotoMock.mockReset();
+	loadRunSummariesMock.mockReset().mockResolvedValue(undefined);
+	getRunSummaryMock.mockReset().mockReturnValue(undefined);
 	templatesState = [];
 });
 
@@ -77,6 +88,29 @@ describe('/templates list page', () => {
 		templatesState = [makeTemplate({ id: '01A', name: 'Alpha' })];
 		render(Page);
 		expect(screen.queryByText('No templates yet — create your first one.')).toBeNull();
+	});
+
+	it('shows run indicator when getRunSummary returns a run', () => {
+		templatesState = [
+			makeTemplate({
+				id: '01A',
+				name: 'Alpha',
+				items: [
+					{ id: 'i1', text: 'a', order: 0 },
+					{ id: 'i2', text: 'b', order: 1 }
+				]
+			})
+		];
+		getRunSummaryMock.mockReturnValue({
+			templateId: '01A',
+			startedAt: '2026-04-30T10:00:00.000Z',
+			itemStates: [
+				{ itemId: 'i1', checked: true },
+				{ itemId: 'i2', checked: false }
+			]
+		});
+		render(Page);
+		expect(screen.getByText('Run in progress — 1 of 2')).not.toBeNull();
 	});
 
 	it('sorts templates by updatedAt descending', () => {

@@ -3,11 +3,8 @@
 	import { debounce } from '$lib/utils/debounce';
 	import type { Item } from '$lib/schemas/template';
 
-	let {
-		templateId,
-		item,
-		onEnter
-	}: { templateId: string; item: Item; onEnter: () => void } = $props();
+	let { templateId, item, onEnter }: { templateId: string; item: Item; onEnter: () => void } =
+		$props();
 
 	const debouncedSave = debounce((text: string) => {
 		const t = text.trim();

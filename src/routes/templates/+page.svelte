@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { browser } from '$app/environment';
 	import { getTemplates } from '$lib/state/template-store.svelte';
+	import { loadRunSummaries, getRunSummary } from '$lib/state/run-store.svelte';
 	import TemplateCard from '$lib/features/templates/TemplateCard.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 
-	const sorted = $derived(
-		[...getTemplates()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-	);
+	const templates = $derived(getTemplates());
+	const sorted = $derived([...templates].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
+
+	$effect(() => {
+		if (browser && templates.length > 0) void loadRunSummaries(templates.map((t) => t.id));
+	});
 </script>
 
 <h1 class="text-2xl">Templates</h1>
@@ -31,7 +36,7 @@
 	<ul class="mt-6 flex flex-col gap-3">
 		{#each sorted as template (template.id)}
 			<li>
-				<TemplateCard {template} />
+				<TemplateCard {template} run={getRunSummary(template.id)} />
 			</li>
 		{/each}
 	</ul>

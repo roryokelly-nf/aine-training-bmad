@@ -25,7 +25,7 @@ describe('RunSchema', () => {
 	});
 
 	it('rejects run missing templateId', () => {
-		const { templateId: _, ...bad } = validRun;
+		const bad = { startedAt: validRun.startedAt, itemStates: validRun.itemStates };
 		expect(v.safeParse(RunSchema, bad).success).toBe(false);
 	});
 

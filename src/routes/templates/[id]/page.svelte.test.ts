@@ -26,6 +26,7 @@ vi.mock('$app/state', () => ({
 	page: { params: { id: '01TEMPLATE00000000000000001' } }
 }));
 vi.mock('$app/navigation', () => ({ goto: gotoMock }));
+vi.mock('$app/paths', () => ({ resolve: (p: string) => p }));
 vi.mock('$app/environment', () => ({ browser: true }));
 vi.mock('$lib/state/toast-store.svelte', () => ({
 	toastStore: { success: toastSuccessMock, error: vi.fn(), info: vi.fn() }
@@ -103,19 +104,67 @@ describe('/templates/[id] page', () => {
 		expect(screen.queryByLabelText('Template name')).toBeNull();
 	});
 
-	// Run button
-	it('Run button is disabled when template has 0 items', () => {
+	// Run button (no active run)
+	it('Run button has aria-disabled="true" when template has 0 items', () => {
+		getActiveRunMock.mockReturnValue(null);
 		templatesState = [makeTemplate({ items: [] })];
 		render(Page);
-		const btn = screen.getByRole('button', { name: 'Run' }) as HTMLButtonElement;
-		expect(btn.disabled).toBe(true);
+		const btn = screen.getByRole('button', { name: 'Run' });
+		expect(btn.getAttribute('aria-disabled')).toBe('true');
 	});
 
-	it('Run button is enabled when template has items', () => {
+	it('Run button has aria-disabled="false" when template has items', () => {
+		getActiveRunMock.mockReturnValue(null);
 		templatesState = [makeTemplate({ items: [{ id: 'I1', text: 'step', order: 0 }] })];
 		render(Page);
-		const btn = screen.getByRole('button', { name: 'Run' }) as HTMLButtonElement;
-		expect(btn.disabled).toBe(false);
+		const btn = screen.getByRole('button', { name: 'Run' });
+		expect(btn.getAttribute('aria-disabled')).toBe('false');
+	});
+
+	// Resume run (active run exists)
+	it('shows "Resume run" link when active run exists', () => {
+		getActiveRunMock.mockReturnValue({
+			templateId: '01TEMPLATE00000000000000001',
+			startedAt: 'x',
+			itemStates: []
+		});
+		templatesState = [makeTemplate({ items: [{ id: 'I1', text: 'step', order: 0 }] })];
+		render(Page);
+		expect(screen.getByRole('link', { name: 'Resume run' })).not.toBeNull();
+	});
+
+	it('"Resume run" link points to run route', () => {
+		getActiveRunMock.mockReturnValue({
+			templateId: '01TEMPLATE00000000000000001',
+			startedAt: 'x',
+			itemStates: []
+		});
+		templatesState = [makeTemplate({ items: [{ id: 'I1', text: 'step', order: 0 }] })];
+		render(Page);
+		const link = screen.getByRole('link', { name: 'Resume run' });
+		expect(link.getAttribute('href')).toBe('/templates/01TEMPLATE00000000000000001/run');
+	});
+
+	it('secondary "Run" button visible when active run exists and template has items', () => {
+		getActiveRunMock.mockReturnValue({
+			templateId: '01TEMPLATE00000000000000001',
+			startedAt: 'x',
+			itemStates: []
+		});
+		templatesState = [makeTemplate({ items: [{ id: 'I1', text: 'step', order: 0 }] })];
+		render(Page);
+		expect(screen.getByRole('button', { name: 'Run' })).not.toBeNull();
+	});
+
+	it('secondary "Run" button hidden when active run exists but template has no items', () => {
+		getActiveRunMock.mockReturnValue({
+			templateId: '01TEMPLATE00000000000000001',
+			startedAt: 'x',
+			itemStates: []
+		});
+		templatesState = [makeTemplate({ items: [] })];
+		render(Page);
+		expect(screen.queryByRole('button', { name: 'Run' })).toBeNull();
 	});
 
 	it('clicking Run with no existing run calls startRun and navigates', async () => {

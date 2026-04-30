@@ -12,7 +12,7 @@ export default defineConfig({
 				extends: './vite.config.ts',
 				test: {
 					name: 'client',
-					environment: 'jsdom',
+					environment: 'happy-dom',
 					include: [
 						'src/lib/storage/**/*.{test,spec}.{js,ts}',
 						'src/lib/state/**/*.{test,spec}.{js,ts}',

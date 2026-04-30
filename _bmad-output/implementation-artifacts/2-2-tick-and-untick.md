@@ -1,6 +1,6 @@
 # Story 2.2: Tick and untick items in a run
 
-Status: review
+Status: done
 
 ## Story
 
@@ -174,3 +174,8 @@ claude-sonnet-4-6
 - `src/routes/templates/[id]/run/page.svelte.test.ts` — new
 ### Change Log
 - 2026-04-30: Story 2.2 implemented. tickItem with optimistic UI + revert, StorageError toast, interactive run page. 166 tests green.
+
+## Review Findings
+
+- [x] [Review][Patch] Missing 2 tests from spec — fixed: added "ticked item text renders with ticked color class" and "items render in template order" tests. [`src/routes/templates/[id]/run/page.svelte.test.ts`]
+- [x] [Review][Defer] `tickItem` with unknown itemId silently no-ops — if called with an itemId not in `activeRun.itemStates`, map finds no match, state is unchanged, but `saveRun` is still called with the unmodified run. No error thrown. Invariant (IDs sourced from template) makes this unreachable in practice. [`src/lib/state/run-store.svelte.ts:32`] — deferred, pre-existing

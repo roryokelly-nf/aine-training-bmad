@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getTemplates, deleteTemplate } from '$lib/state/template-store.svelte';
 	import { toastStore } from '$lib/state/toast-store.svelte';
 	import { getActiveRun, loadRun, startRun, clearActiveRun } from '$lib/state/run-store.svelte';
@@ -23,17 +24,18 @@
 	let deleteButtonEl = $state<HTMLButtonElement | null>(null);
 
 	function handleRunClick() {
-		if (existingRun) {
-			showRunReplaceModal = true;
-		} else {
-			void handleStartRun();
-		}
+		if (runButtonDisabled) return;
+		void handleStartRun();
 	}
 
 	async function handleStartRun() {
 		if (!template) return;
-		await startRun(template);
-		goto(`/templates/${template.id}/run`);
+		try {
+			await startRun(template);
+			goto(resolve(`/templates/${template.id}/run`));
+		} catch {
+			toastStore.error('Failed to start run. Please try again.');
+		}
 	}
 
 	async function handleDelete() {
@@ -42,7 +44,7 @@
 		clearActiveRun();
 		showDeleteModal = false;
 		toastStore.success('Template deleted.');
-		goto('/templates');
+		goto(resolve('/templates'));
 	}
 
 	function handleDeleteCancel() {
@@ -60,14 +62,28 @@
 		<ItemEditor {template} />
 	</div>
 	<div class="mt-6 flex items-center gap-3">
-		<button
-			type="button"
-			onclick={handleRunClick}
-			disabled={runButtonDisabled}
-			title={runButtonDisabled ? 'Add at least one item to run this template' : undefined}
-			class="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-40"
-			>Run</button
-		>
+		{#if existingRun}
+			<a
+				href={resolve(`/templates/${id}/run`)}
+				class="rounded bg-slate-900 px-4 py-2 text-sm text-white">Resume run</a
+			>
+			{#if !runButtonDisabled}
+				<button
+					type="button"
+					onclick={() => (showRunReplaceModal = true)}
+					class="text-sm text-slate-600 hover:underline">Run</button
+				>
+			{/if}
+		{:else}
+			<button
+				type="button"
+				onclick={handleRunClick}
+				aria-disabled={runButtonDisabled}
+				title={runButtonDisabled ? 'Add at least one item to run this template' : undefined}
+				class="rounded bg-slate-900 px-4 py-2 text-sm text-white aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+				>Run</button
+			>
+		{/if}
 		<button
 			bind:this={deleteButtonEl}
 			type="button"

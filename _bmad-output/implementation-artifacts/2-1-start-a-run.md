@@ -1,6 +1,6 @@
 # Story 2.1: Start a run from a template
 
-Status: review
+Status: done
 
 ## Story
 
@@ -300,3 +300,9 @@ claude-sonnet-4-6
 - `src/routes/templates/[id]/page.svelte.test.ts` — updated
 ### Change Log
 - 2026-04-30: Story 2.1 implemented. Run schema, run store, run route scaffold, Run button on template detail with replace-run confirmation. 153 tests green; 38.45 kB gzipped.
+
+## Review Findings
+
+- [x] [Review][Decision] `disabled` vs `aria-disabled` on Run button — fixed: changed to `aria-disabled` + manual click guard in `handleRunClick`. [`src/routes/templates/[id]/+page.svelte:66`]
+- [x] [Review][Patch] Async errors silently swallowed in `handleStartRun` — fixed: wrapped `startRun` + `goto` in try/catch, surfaces toast on failure. [`src/routes/templates/[id]/+page.svelte:29,85`]
+- [x] [Review][Defer] Race condition on loadRun before first click — `loadRun(id)` runs asynchronously in `$effect`; if user clicks Run before it resolves, `existingRun` is null and replace-run modal is skipped, silently overwriting an existing run. MVP-acceptable given the narrow window. [`src/routes/templates/[id]/+page.svelte:17-19`] — deferred, pre-existing

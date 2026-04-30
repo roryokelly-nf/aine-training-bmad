@@ -4,7 +4,10 @@ import {
 	startRun,
 	getActiveRun,
 	clearActiveRun,
+	resetRun,
 	tickItem,
+	loadRunSummaries,
+	getRunSummary,
 	_resetForTests
 } from './run-store.svelte';
 import { StorageError } from '$lib/storage/storage-error';
@@ -113,6 +116,28 @@ describe('run-store', () => {
 		expect(fake._runs.get(template.id)).toBeDefined();
 	});
 
+	describe('resetRun', () => {
+		it('clears the run from storage backend', async () => {
+			const fake = makeFakeBackend();
+			_setStorageForTests(fake);
+			const template = makeTemplate();
+			await startRun(template);
+			expect(fake._runs.has(template.id)).toBe(true);
+			await resetRun(template.id);
+			expect(fake._runs.has(template.id)).toBe(false);
+		});
+
+		it('sets activeRun to null', async () => {
+			const fake = makeFakeBackend();
+			_setStorageForTests(fake);
+			const template = makeTemplate();
+			await startRun(template);
+			expect(getActiveRun()).not.toBeNull();
+			await resetRun(template.id);
+			expect(getActiveRun()).toBeNull();
+		});
+	});
+
 	it('clearActiveRun sets activeRun to null without touching storage', async () => {
 		const fake = makeFakeBackend();
 		_setStorageForTests(fake);
@@ -163,6 +188,49 @@ describe('run-store', () => {
 			const fake = makeFakeBackend();
 			_setStorageForTests(fake);
 			await expect(tickItem('I1')).rejects.toThrow('no active run');
+		});
+	});
+
+	describe('loadRunSummaries / getRunSummary', () => {
+		it('loads runs for all provided templateIds', async () => {
+			const fake = makeFakeBackend();
+			const run: Run = {
+				templateId: '01TEMPLATE00000000000000001',
+				startedAt: '2026-04-30T10:00:00.000Z',
+				itemStates: [{ itemId: 'I1', checked: true }]
+			};
+			fake._runs.set('01TEMPLATE00000000000000001', run);
+			_setStorageForTests(fake);
+			await loadRunSummaries(['01TEMPLATE00000000000000001']);
+			expect(getRunSummary('01TEMPLATE00000000000000001')).toEqual(run);
+		});
+
+		it('stores null for templateIds with no run', async () => {
+			const fake = makeFakeBackend();
+			_setStorageForTests(fake);
+			await loadRunSummaries(['NO_RUN_HERE']);
+			expect(getRunSummary('NO_RUN_HERE')).toBeNull();
+		});
+
+		it('returns undefined for a templateId that was never loaded', async () => {
+			const fake = makeFakeBackend();
+			_setStorageForTests(fake);
+			await loadRunSummaries([]);
+			expect(getRunSummary('NEVER_LOADED')).toBeUndefined();
+		});
+
+		it('loads multiple templateIds correctly', async () => {
+			const fake = makeFakeBackend();
+			const run: Run = {
+				templateId: 'T1',
+				startedAt: '2026-04-30T10:00:00.000Z',
+				itemStates: []
+			};
+			fake._runs.set('T1', run);
+			_setStorageForTests(fake);
+			await loadRunSummaries(['T1', 'T2']);
+			expect(getRunSummary('T1')).toEqual(run);
+			expect(getRunSummary('T2')).toBeNull();
 		});
 	});
 });

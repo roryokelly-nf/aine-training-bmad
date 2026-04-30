@@ -68,7 +68,7 @@ describe('LocalStorageBackend (failure modes)', () => {
 
 	it('rejects with QUOTA_EXCEEDED when setItem throws QuotaExceededError', async () => {
 		const backend = new LocalStorageBackend();
-		const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+		const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
 			throw new DOMException('Quota exceeded', 'QuotaExceededError');
 		});
 		try {
@@ -100,9 +100,9 @@ describe('LocalStorageBackend (failure modes)', () => {
 	it('rolls back per-template write if index write fails', async () => {
 		const backend = new LocalStorageBackend();
 		const t = validTemplate();
-		const spy = vi.spyOn(Storage.prototype, 'setItem');
+		const spy = vi.spyOn(localStorage, 'setItem');
 		spy.mockImplementationOnce((k, v) => {
-			Storage.prototype.setItem.call(localStorage, k, v);
+			localStorage.setItem.call(localStorage, k, v);
 		});
 		spy.mockImplementationOnce(() => {
 			throw new DOMException('Quota exceeded', 'QuotaExceededError');
@@ -118,10 +118,9 @@ describe('LocalStorageBackend (failure modes)', () => {
 
 describe('LocalStorageBackend (UNAVAILABLE)', () => {
 	it('rejects all methods when probe fails', async () => {
-		const orig = Storage.prototype.setItem;
-		Storage.prototype.setItem = function () {
+		const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
 			throw new Error('no storage');
-		};
+		});
 		try {
 			const backend = new LocalStorageBackend();
 			await expect(backend.getTemplates()).rejects.toMatchObject({ kind: 'UNAVAILABLE' });
@@ -130,7 +129,7 @@ describe('LocalStorageBackend (UNAVAILABLE)', () => {
 			});
 			await expect(backend.deleteTemplate('x')).rejects.toMatchObject({ kind: 'UNAVAILABLE' });
 		} finally {
-			Storage.prototype.setItem = orig;
+			spy.mockRestore();
 		}
 	});
 });

@@ -1,9 +1,11 @@
+import { SvelteMap } from 'svelte/reactivity';
 import { storage } from '$lib/storage';
 import { nowIso } from '$lib/utils/date';
 import type { Run } from '$lib/schemas/run';
 import type { Template } from '$lib/schemas/template';
 
 let activeRun = $state<Run | null>(null);
+const runSummaries = new SvelteMap<string, Run | null>();
 
 export function getActiveRun(): Run | null {
 	return activeRun;
@@ -42,10 +44,30 @@ export async function tickItem(itemId: string): Promise<void> {
 	}
 }
 
+export async function resetRun(templateId: string): Promise<void> {
+	await storage().clearRun(templateId);
+	activeRun = null;
+}
+
+export async function loadRunSummaries(templateIds: string[]): Promise<void> {
+	const entries = await Promise.all(
+		templateIds.map(async (id) => [id, await storage().getActiveRun(id)] as const)
+	);
+	runSummaries.clear();
+	for (const [id, run] of entries) {
+		runSummaries.set(id, run);
+	}
+}
+
+export function getRunSummary(templateId: string): Run | null | undefined {
+	return runSummaries.get(templateId);
+}
+
 export function clearActiveRun(): void {
 	activeRun = null;
 }
 
 export function _resetForTests(): void {
 	activeRun = null;
+	runSummaries.clear();
 }
