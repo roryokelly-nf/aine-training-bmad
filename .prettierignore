@@ -17,3 +17,7 @@ bun.lockb
 # Build outputs
 /build/
 /.svelte-kit/
+
+# Playwright artifacts
+/test-results/
+/playwright-report/

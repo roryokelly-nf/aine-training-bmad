@@ -15,3 +15,4 @@ export function _setStorageForTests(backend: StorageBackend | null): void {
 export type { StorageBackend, Run } from './types';
 export { StorageError } from './storage-error';
 export type { StorageErrorKind } from './storage-error';
+export { consumeFutureSchemaWarning } from './storage-events';

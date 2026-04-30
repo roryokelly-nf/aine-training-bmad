@@ -57,5 +57,12 @@ export default defineConfig(
 		rules: {
 			'no-restricted-globals': 'off'
 		}
+	},
+	{
+		// E2E tests use page.evaluate(() => localStorage.clear()) — runs in browser context, not app code.
+		files: ['tests/e2e/**/*.ts', 'tests/e2e/**/*.js'],
+		rules: {
+			'no-restricted-globals': 'off'
+		}
 	}
 );

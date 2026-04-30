@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 	import { getTemplates, deleteTemplate } from '$lib/state/template-store.svelte';
 	import { toastStore } from '$lib/state/toast-store.svelte';
+	import { StorageError } from '$lib/storage';
 	import { getActiveRun, loadRun, startRun, clearActiveRun } from '$lib/state/run-store.svelte';
 	import ItemEditor from '$lib/features/templates/ItemEditor.svelte';
 	import TemplateNameEditor from '$lib/features/templates/TemplateNameEditor.svelte';
@@ -33,8 +34,12 @@
 		try {
 			await startRun(template);
 			goto(resolve(`/templates/${template.id}/run`));
-		} catch {
-			toastStore.error('Failed to start run. Please try again.');
+		} catch (err) {
+			if (err instanceof StorageError && err.kind === 'QUOTA_EXCEEDED') {
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
+			} else {
+				toastStore.error('Failed to start run. Please try again.');
+			}
 		}
 	}
 

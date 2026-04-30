@@ -33,7 +33,9 @@
 		try {
 			await tickItem(itemId);
 		} catch (err) {
-			if (err instanceof StorageError) {
+			if (err instanceof StorageError && err.kind === 'QUOTA_EXCEEDED') {
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
+			} else if (err instanceof StorageError) {
 				toastStore.error('Failed to save tick state. Please try again.');
 			} else {
 				throw err;
@@ -42,13 +44,18 @@
 	}
 
 	async function handleResetConfirm() {
-		if (!run) return;
+		if (!run) {
+			showResetModal = false;
+			return;
+		}
 		try {
 			await resetRun(run.templateId);
 			toastStore.success('Run reset.');
 			goto(resolve(`/templates/${id}`));
 		} catch (err) {
-			if (err instanceof StorageError) {
+			if (err instanceof StorageError && err.kind === 'QUOTA_EXCEEDED') {
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
+			} else if (err instanceof StorageError) {
 				toastStore.error('Failed to reset run. Please try again.');
 			} else {
 				throw err;

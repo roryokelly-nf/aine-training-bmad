@@ -4,9 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Template } from '$lib/schemas/template';
 
 const gotoMock = vi.fn();
-const { loadRunSummariesMock, getRunSummaryMock } = vi.hoisted(() => ({
+const { loadRunSummariesMock, getRunSummaryMock, getStorageUnavailableMock } = vi.hoisted(() => ({
 	loadRunSummariesMock: vi.fn().mockResolvedValue(undefined),
-	getRunSummaryMock: vi.fn().mockReturnValue(undefined)
+	getRunSummaryMock: vi.fn().mockReturnValue(undefined),
+	getStorageUnavailableMock: vi.fn().mockReturnValue(false)
 }));
 let templatesState: Template[] = [];
 
@@ -23,6 +24,9 @@ vi.mock('$lib/state/template-store.svelte', () => ({
 vi.mock('$lib/state/run-store.svelte', () => ({
 	loadRunSummaries: loadRunSummariesMock,
 	getRunSummary: getRunSummaryMock
+}));
+vi.mock('$lib/state/storage-status.svelte', () => ({
+	getStorageUnavailable: getStorageUnavailableMock
 }));
 
 import Page from './+page.svelte';
@@ -42,6 +46,7 @@ beforeEach(() => {
 	gotoMock.mockReset();
 	loadRunSummariesMock.mockReset().mockResolvedValue(undefined);
 	getRunSummaryMock.mockReset().mockReturnValue(undefined);
+	getStorageUnavailableMock.mockReset().mockReturnValue(false);
 	templatesState = [];
 });
 
@@ -52,9 +57,18 @@ describe('/templates list page', () => {
 		expect(headerBtns.length).toBeGreaterThanOrEqual(1);
 	});
 
-	it('renders EmptyState with exact copy when there are no templates', () => {
+	it('renders EmptyState with primary copy when there are no templates', () => {
 		render(Page);
-		expect(screen.getByText('No templates yet — create your first one.')).not.toBeNull();
+		expect(screen.getByText('No templates yet on this browser.')).not.toBeNull();
+	});
+
+	it('renders EmptyState secondary copy distinguishing browser-local storage', () => {
+		render(Page);
+		expect(
+			screen.getByText(
+				"Templates are stored locally on each browser — they don't sync across browsers in this version. Sync between browsers is on the roadmap."
+			)
+		).not.toBeNull();
 	});
 
 	it('EmptyState CTA navigates to /templates/new', async () => {
@@ -87,7 +101,7 @@ describe('/templates list page', () => {
 	it('does NOT render EmptyState when templates exist', () => {
 		templatesState = [makeTemplate({ id: '01A', name: 'Alpha' })];
 		render(Page);
-		expect(screen.queryByText('No templates yet — create your first one.')).toBeNull();
+		expect(screen.queryByText('No templates yet on this browser.')).toBeNull();
 	});
 
 	it('shows run indicator when getRunSummary returns a run', () => {
@@ -111,6 +125,19 @@ describe('/templates list page', () => {
 		});
 		render(Page);
 		expect(screen.getByText('Run in progress — 1 of 2')).not.toBeNull();
+	});
+
+	it('Create template button is aria-disabled when storage unavailable', () => {
+		getStorageUnavailableMock.mockReturnValue(true);
+		render(Page);
+		const btns = screen.getAllByRole('button', { name: 'Create template' });
+		expect(btns[0].getAttribute('aria-disabled')).toBe('true');
+	});
+
+	it('Create template button is not aria-disabled when storage available', () => {
+		render(Page);
+		const btns = screen.getAllByRole('button', { name: 'Create template' });
+		expect(btns[0].getAttribute('aria-disabled')).toBe('false');
 	});
 
 	it('sorts templates by updatedAt descending', () => {

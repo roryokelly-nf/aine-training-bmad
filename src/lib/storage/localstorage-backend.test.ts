@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LocalStorageBackend } from './localstorage-backend';
 import { StorageError } from './storage-error';
+import { consumeFutureSchemaWarning, _resetFutureSchemaForTests } from './storage-events';
 import type { Template } from '$lib/schemas/template';
 
 const validTemplate = (overrides: Partial<Template> = {}): Template => ({
@@ -15,6 +16,7 @@ const validTemplate = (overrides: Partial<Template> = {}): Template => ({
 describe('LocalStorageBackend (happy path)', () => {
 	beforeEach(() => {
 		localStorage.clear();
+		_resetFutureSchemaForTests();
 	});
 
 	it('saves and retrieves a template', async () => {
@@ -56,6 +58,7 @@ describe('LocalStorageBackend (happy path)', () => {
 describe('LocalStorageBackend (failure modes)', () => {
 	beforeEach(() => {
 		localStorage.clear();
+		_resetFutureSchemaForTests();
 		vi.restoreAllMocks();
 	});
 
@@ -215,6 +218,44 @@ describe('LocalStorageBackend (sanitize-on-read for legacy items missing order)'
 			{ id: 'I1', text: 'a', order: 0 },
 			{ id: 'I2', text: 'b', order: 1 }
 		]);
+	});
+});
+
+describe('LocalStorageBackend (future schema version)', () => {
+	beforeEach(() => {
+		localStorage.clear();
+		_resetFutureSchemaForTests();
+	});
+
+	it('skips blob with schemaVersion 2 and signals future schema warning', async () => {
+		const backend = new LocalStorageBackend();
+		const futureBlob = JSON.stringify({
+			schemaVersion: 2,
+			template: {
+				id: 'T1',
+				name: 'Future',
+				items: [],
+				createdAt: '2026-04-30T10:00:00.000Z',
+				updatedAt: '2026-04-30T10:00:00.000Z'
+			}
+		});
+		localStorage.setItem('cl:tpl:T1', futureBlob);
+		localStorage.setItem('cl:tpl:index', JSON.stringify(['T1']));
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const templates = await backend.getTemplates();
+		expect(templates).toHaveLength(0);
+		expect(consumeFutureSchemaWarning()).toBe(true);
+		expect(warn).toHaveBeenCalledWith(expect.stringContaining('future schemaVersion 2'));
+		warn.mockRestore();
+	});
+
+	it('loads schemaVersion 1 blob normally and does not set future schema warning', async () => {
+		const backend = new LocalStorageBackend();
+		await backend.saveTemplate(validTemplate());
+		_resetFutureSchemaForTests(); // clear any side effects from saveTemplate
+		const templates = await backend.getTemplates();
+		expect(templates).toHaveLength(1);
+		expect(consumeFutureSchemaWarning()).toBe(false);
 	});
 });
 

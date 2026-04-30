@@ -139,7 +139,9 @@ describe('/templates/[id]/run page', () => {
 		getActiveRunMock.mockReturnValue(makeRun());
 		render(Page);
 		await user.click(screen.getByRole('button', { name: 'Step 1' }));
-		expect(toastErrorMock).toHaveBeenCalledWith('Failed to save tick state. Please try again.');
+		expect(toastErrorMock).toHaveBeenCalledWith(
+			'Storage is full. Delete templates or archived runs to free space.'
+		);
 	});
 
 	it('renders fallback when no active run', () => {

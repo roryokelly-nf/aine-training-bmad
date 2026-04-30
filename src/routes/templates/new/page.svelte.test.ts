@@ -115,7 +115,9 @@ describe('/templates/new', () => {
 		render(Page);
 		await user.type(getInput(), 'My template');
 		await user.click(getSubmit());
-		expect(toastErrorMock).toHaveBeenCalledWith('Storage is full. Free up space and try again.');
+		expect(toastErrorMock).toHaveBeenCalledWith(
+			'Storage is full. Delete templates or archived runs to free space.'
+		);
 		expect(gotoMock).not.toHaveBeenCalled();
 		expect(getInput().value).toBe('My template');
 	});

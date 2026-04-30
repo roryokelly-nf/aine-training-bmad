@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { updateItemText, removeItem } from '$lib/state/template-store.svelte';
+	import { toastStore } from '$lib/state/toast-store.svelte';
+	import { StorageError } from '$lib/storage';
 	import { debounce } from '$lib/utils/debounce';
 	import type { Item } from '$lib/schemas/template';
 
@@ -9,7 +11,13 @@
 	const debouncedSave = debounce((text: string) => {
 		const t = text.trim();
 		if (t.length === 0) return;
-		void updateItemText(templateId, item.id, t);
+		updateItemText(templateId, item.id, t).catch((e: unknown) => {
+			if (e instanceof StorageError && e.kind === 'QUOTA_EXCEEDED') {
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
+			} else {
+				toastStore.error('Could not save item. Please try again.');
+			}
+		});
 	}, 400);
 </script>
 

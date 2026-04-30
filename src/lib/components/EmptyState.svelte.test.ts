@@ -24,6 +24,16 @@ describe('EmptyState', () => {
 		expect(screen.queryByRole('button')).toBeNull();
 	});
 
+	it('renders secondary message when provided', () => {
+		render(EmptyState, { message: 'Primary', secondary: 'Secondary detail' });
+		expect(screen.getByText('Secondary detail')).not.toBeNull();
+	});
+
+	it('does not render secondary when omitted', () => {
+		render(EmptyState, { message: 'Primary' });
+		expect(screen.queryByText('Secondary detail')).toBeNull();
+	});
+
 	it('invokes the cta.onClick handler when CTA is clicked', async () => {
 		const user = userEvent.setup();
 		const onClick = vi.fn();

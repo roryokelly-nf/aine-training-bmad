@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import type { StorageBackend, Run } from './types';
 import { TemplateSchema, PersistedTemplateSchema, type Template } from '$lib/schemas/template';
 import { StorageError } from './storage-error';
+import { signalFutureSchema } from './storage-events';
 
 const NS = 'cl:';
 const TEMPLATE_INDEX_KEY = `${NS}tpl:index`;
@@ -119,6 +120,14 @@ export class LocalStorageBackend implements StorageBackend {
 			if (!raw) continue;
 			try {
 				const parsed: unknown = JSON.parse(raw);
+				if (parsed && typeof parsed === 'object' && 'schemaVersion' in parsed) {
+					const sv = (parsed as { schemaVersion: unknown }).schemaVersion;
+					if (typeof sv === 'number' && sv > 1) {
+						console.warn(`[storage] skipping template blob ${id} — future schemaVersion ${sv}`);
+						signalFutureSchema();
+						continue;
+					}
+				}
 				const persisted = v.parse(PersistedTemplateSchema, sanitizePersisted(parsed));
 				out.push(persisted.template);
 			} catch (err) {

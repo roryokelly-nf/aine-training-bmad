@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { addItem } from '$lib/state/template-store.svelte';
+	import { toastStore } from '$lib/state/toast-store.svelte';
+	import { StorageError } from '$lib/storage';
 	import type { Template } from '$lib/schemas/template';
 	import ItemRow from './ItemRow.svelte';
 
@@ -20,6 +22,12 @@
 		try {
 			await addItem(template.id, trimmed);
 			draftText = '';
+		} catch (err) {
+			if (err instanceof StorageError && err.kind === 'QUOTA_EXCEEDED') {
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
+			} else {
+				toastStore.error('Could not add item. Please try again.');
+			}
 		} finally {
 			committing = false;
 		}

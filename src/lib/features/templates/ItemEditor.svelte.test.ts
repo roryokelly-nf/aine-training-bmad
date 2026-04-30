@@ -2,13 +2,18 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Template } from '$lib/schemas/template';
+import { StorageError } from '$lib/storage/storage-error';
 
-const { addItem, updateItemText, removeItem } = vi.hoisted(() => ({
+const { addItem, updateItemText, removeItem, toastErrorMock } = vi.hoisted(() => ({
 	addItem: vi.fn(),
 	updateItemText: vi.fn(),
-	removeItem: vi.fn()
+	removeItem: vi.fn(),
+	toastErrorMock: vi.fn()
 }));
 vi.mock('$lib/state/template-store.svelte', () => ({ addItem, updateItemText, removeItem }));
+vi.mock('$lib/state/toast-store.svelte', () => ({
+	toastStore: { error: toastErrorMock, success: vi.fn(), info: vi.fn() }
+}));
 
 import ItemEditor from './ItemEditor.svelte';
 
@@ -27,6 +32,7 @@ beforeEach(() => {
 	addItem.mockReset();
 	updateItemText.mockReset();
 	removeItem.mockReset();
+	toastErrorMock.mockReset();
 	vi.useFakeTimers();
 });
 
@@ -157,6 +163,19 @@ describe('ItemEditor', () => {
 		const btn = screen.getByRole('button', { name: 'Remove item: First' });
 		await user.click(btn);
 		expect(removeItem).toHaveBeenCalledWith('01TEMPLATE00000000000000001', 'I1');
+	});
+
+	it('add: QUOTA_EXCEEDED on addItem shows storage-full toast and preserves draft', async () => {
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+		addItem.mockRejectedValueOnce(new StorageError('QUOTA_EXCEEDED', 'full'));
+		render(ItemEditor, { template: makeTemplate() });
+		const input = screen.getByLabelText('Add item') as HTMLInputElement;
+		await user.type(input, 'My item');
+		await user.keyboard('{Enter}');
+		expect(toastErrorMock).toHaveBeenCalledWith(
+			'Storage is full. Delete templates or archived runs to free space.'
+		);
+		expect(input.value).toBe('My item');
 	});
 
 	it('add input has maxlength="280"', () => {

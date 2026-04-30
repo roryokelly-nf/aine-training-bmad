@@ -33,10 +33,10 @@
 			await goto(resolve(`/templates/${t.id}`));
 		} catch (err) {
 			if (err instanceof StorageError && err.kind === 'QUOTA_EXCEEDED') {
-				toastStore.error('Storage is full. Free up space and try again.');
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
 			} else if (err instanceof StorageError && err.kind === 'UNAVAILABLE') {
 				toastStore.error(
-					'Storage is unavailable. Try a different browser or turn off private browsing.'
+					"Local storage is disabled in this browser. Templates can't be saved. Try a different browser or disable private mode."
 				);
 			} else {
 				toastStore.error('Could not create template. Please try again.');

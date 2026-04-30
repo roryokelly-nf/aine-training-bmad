@@ -32,7 +32,7 @@
 			savedName = prevSaved;
 			localName = prevSaved;
 			if (e instanceof StorageError && e.kind === 'QUOTA_EXCEEDED') {
-				toastStore.error('Storage is full. Free up space and try again.');
+				toastStore.error('Storage is full. Delete templates or archived runs to free space.');
 			} else {
 				toastStore.error('Could not save name. Please try again.');
 			}
