@@ -1,6 +1,6 @@
 # Story 1.6: Rename a template
 
-Status: review
+Status: done
 
 ## Story
 
@@ -236,6 +236,11 @@ claude-sonnet-4-6
 - `src/lib/features/templates/TemplateNameEditor.svelte.test.ts` — new (12 tests)
 - `src/routes/templates/[id]/+page.svelte` — updated (mounts TemplateNameEditor)
 - `src/routes/templates/[id]/page.svelte.test.ts` — updated (name input assertion, updateTemplate mock)
+
+### Review Findings
+
+- [x] [Review][Patch] `void updateTemplate(...)` swallows `StorageError`. **Fixed.** — QUOTA_EXCEEDED / UNAVAILABLE on rename gives user no feedback; name appears saved but wasn't persisted (violates AC#2 spirit) [`src/lib/features/templates/TemplateNameEditor.svelte:debouncedSave`]
+- [x] [Review][Defer] `savedName` initialised at mount only — if template prop changes externally, blur-restore uses stale name; single-user/single-tab scope; acceptable. [`src/lib/features/templates/TemplateNameEditor.svelte`] — deferred, pre-existing
 
 ### Change Log
 

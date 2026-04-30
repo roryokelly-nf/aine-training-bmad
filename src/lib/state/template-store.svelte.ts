@@ -15,8 +15,11 @@ export function isLoaded(): boolean {
 }
 
 export async function loadTemplates(): Promise<void> {
-	templates = await storage().getTemplates();
-	loaded = true;
+	try {
+		templates = await storage().getTemplates();
+	} finally {
+		loaded = true;
+	}
 }
 
 export async function addTemplate(
@@ -37,7 +40,11 @@ export async function updateTemplate(t: Template): Promise<void> {
 
 export async function deleteTemplate(id: string): Promise<void> {
 	await storage().deleteTemplate(id);
-	await storage().clearRun(id);
+	try {
+		await storage().clearRun(id);
+	} catch {
+		/* best-effort: run cleanup failure doesn't block template removal from state */
+	}
 	templates = templates.filter((t) => t.id !== id);
 }
 

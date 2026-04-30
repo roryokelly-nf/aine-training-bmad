@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { updateTemplate } from '$lib/state/template-store.svelte';
+	import { toastStore } from '$lib/state/toast-store.svelte';
+	import { StorageError } from '$lib/storage';
 	import { debounce } from '$lib/utils/debounce';
 	import type { Template } from '$lib/schemas/template';
 
@@ -24,8 +26,17 @@
 			return;
 		}
 		error = null;
+		const prevSaved = savedName;
 		savedName = trimmed;
-		void updateTemplate({ ...template, name: trimmed });
+		updateTemplate({ ...template, name: trimmed }).catch((e: unknown) => {
+			savedName = prevSaved;
+			localName = prevSaved;
+			if (e instanceof StorageError && e.kind === 'QUOTA_EXCEEDED') {
+				toastStore.error('Storage is full. Free up space and try again.');
+			} else {
+				toastStore.error('Could not save name. Please try again.');
+			}
+		});
 	}, 400);
 </script>
 

@@ -10,14 +10,16 @@ const {
 	toastSuccessMock,
 	startRunMock,
 	loadRunMock,
-	getActiveRunMock
+	getActiveRunMock,
+	clearActiveRunMock
 } = vi.hoisted(() => ({
 	gotoMock: vi.fn(),
 	deleteTemplateMock: vi.fn(),
 	toastSuccessMock: vi.fn(),
 	startRunMock: vi.fn(),
 	loadRunMock: vi.fn(),
-	getActiveRunMock: vi.fn()
+	getActiveRunMock: vi.fn(),
+	clearActiveRunMock: vi.fn()
 }));
 
 vi.mock('$app/state', () => ({
@@ -42,7 +44,8 @@ vi.mock('$lib/state/template-store.svelte', () => ({
 vi.mock('$lib/state/run-store.svelte', () => ({
 	getActiveRun: getActiveRunMock,
 	loadRun: loadRunMock,
-	startRun: startRunMock
+	startRun: startRunMock,
+	clearActiveRun: clearActiveRunMock
 }));
 
 import Page from './+page.svelte';

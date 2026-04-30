@@ -1,6 +1,6 @@
 # Story 1.4: View all templates
 
-Status: review
+Status: done
 
 ## Story
 

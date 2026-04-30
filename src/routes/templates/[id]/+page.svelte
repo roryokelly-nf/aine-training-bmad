@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { getTemplates, deleteTemplate } from '$lib/state/template-store.svelte';
 	import { toastStore } from '$lib/state/toast-store.svelte';
-	import { getActiveRun, loadRun, startRun } from '$lib/state/run-store.svelte';
+	import { getActiveRun, loadRun, startRun, clearActiveRun } from '$lib/state/run-store.svelte';
 	import ItemEditor from '$lib/features/templates/ItemEditor.svelte';
 	import TemplateNameEditor from '$lib/features/templates/TemplateNameEditor.svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
@@ -39,6 +39,7 @@
 	async function handleDelete() {
 		if (!template) return;
 		await deleteTemplate(template.id);
+		clearActiveRun();
 		showDeleteModal = false;
 		toastStore.success('Template deleted.');
 		goto('/templates');

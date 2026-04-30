@@ -1,6 +1,6 @@
 # Story 1.3: Create a new template
 
-Status: review
+Status: done
 
 ## Story
 

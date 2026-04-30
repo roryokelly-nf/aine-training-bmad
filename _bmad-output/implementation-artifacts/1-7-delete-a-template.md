@@ -1,6 +1,6 @@
 # Story 1.7: Delete a template
 
-Status: review
+Status: done
 
 ## Story
 
@@ -328,6 +328,13 @@ claude-sonnet-4-6
 - `src/lib/state/template-store.test.ts` — updated (1 new clearRun test)
 - `src/routes/templates/[id]/+page.svelte` — updated (delete button + ConfirmModal)
 - `src/routes/templates/[id]/page.svelte.test.ts` — updated (delete flow tests, dialog mock)
+
+### Review Findings
+
+- [x] [Review][Patch] Duplicate `aria-labelledby`/`aria-describedby` IDs — both `ConfirmModal` instances on `[id]/+page.svelte` hardcode `id="modal-title"` and `id="modal-desc"`; both are in DOM simultaneously, breaking screen reader associations [`src/lib/components/ConfirmModal.svelte`]
+- [x] [Review][Patch] `ConfirmModal` double-`oncancel` — when `open` goes false after a confirm, `$effect` calls `dialogEl.close()` which fires `onclose` → `oncancel` a second time; fix: guard with `if (dialogEl.open) dialogEl.close()` [`src/lib/components/ConfirmModal.svelte:$effect`]
+- [x] [Review][Patch] `clearActiveRun()` not called after delete — AC#2 requires run cleared; `deleteTemplate` clears localStorage but does not update in-memory `run-store` state [`src/routes/templates/[id]/+page.svelte:handleDelete`]
+- [x] [Review][Defer] `goto('/templates')` not awaited after delete — fire-and-forget navigation is acceptable SvelteKit pattern; practical impact nil. [`src/routes/templates/[id]/+page.svelte:handleDelete`] — deferred, pre-existing
 
 ### Change Log
 

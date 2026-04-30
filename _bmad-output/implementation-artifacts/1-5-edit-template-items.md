@@ -1,6 +1,6 @@
 # Story 1.5: Edit a template's items (add, edit text, remove)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -548,6 +548,12 @@ claude-sonnet-4-6
 - `src/routes/templates/[id]/+page.ts` — updated (sync, store.find, returns {})
 - `src/routes/templates/[id]/page.svelte.test.ts` — new (6 tests)
 - `src/lib/features/templates/TemplateCard.svelte.test.ts` — updated (order in fixtures)
+
+### Review Findings
+
+- [x] [Review][Patch] `{@const debounced = debounce(...)}` inside `{#each}` — debounce instance recreated on every re-render (e.g. when any item is added/removed), leaving prior timer alive and a new instance starting fresh; can cause double writes [`src/lib/features/templates/ItemEditor.svelte`]
+- [x] [Review][Patch] Double `commitDraft` race — if Enter is pressed and user tabs away before `addItem` resolves, `onblur` fires a second `commitDraft` with the same non-empty text still in `draftText`, double-adding the item [`src/lib/features/templates/ItemEditor.svelte:commitDraft`]
+- [x] [Review][Defer] `localName`/`savedName` not reactive to external template prop changes — known Svelte 5 limitation, acknowledged in completion notes; single-user single-tab scope makes this acceptable. [`src/lib/features/templates/TemplateNameEditor.svelte`] — deferred, pre-existing
 
 ### Change Log
 

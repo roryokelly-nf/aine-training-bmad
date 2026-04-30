@@ -1,6 +1,6 @@
 # Story 1.2: Storage abstraction and template-store foundation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -388,6 +388,19 @@ so that every feature in Epic 1 onward reads and writes through one call surface
     - Open devtools console; run `(await import('/src/lib/state/template-store.svelte.ts')).getTemplates()` — should be empty array.
     - Open devtools console; run a quick `addTemplate` via the module to verify a toast appears (or that no error fires) and localStorage gains a `cl:tpl:*` key.
     - Reload the page; the template should persist.
+
+### Review Findings
+
+- [x] [Review][Decision] `src/lib/schemas/run.ts` created with full Valibot schema — story explicitly said "Do NOT yet add the Run schema in this story"; run types also re-exported from `types.ts`. **Decision: keep** — intentional early implementation. [`src/lib/schemas/run.ts`, `src/lib/storage/types.ts`]
+- [x] [Review][Decision] Template `name` maxLength: story 1.2 spec says 120 but story 1.3 AC #4 explicitly bumps to 200. **Decision: reverted to 200** — story 1.3 AC is canonical. [`src/lib/schemas/template.ts:12`, `src/lib/schemas/template.test.ts`]
+- [x] [Review][Decision] `order` field, `addItem`, `updateItemText`, `removeItem` implemented ahead of story 1.5. **Decision: keep** — later stories depend on them. [`src/lib/schemas/template.ts:6`, `src/lib/state/template-store.svelte.ts:44-74`]
+- [x] [Review][Patch] `deleteTemplate` state inconsistency — if `deleteTemplate` succeeds but `clearRun` throws, template ghost in UI. **Fixed: clearRun wrapped in try-catch.** [`src/lib/state/template-store.svelte.ts:38-44`]
+- [x] [Review][Patch] `loadTemplates` — `loaded` stays `false` after `StorageError`. **Fixed: try-finally ensures loaded=true always set.** [`src/lib/state/template-store.svelte.ts:17-22`]
+- [x] [Review][Defer] `getActiveRun`/`archiveRun` cast JSON without Valibot validation — by design; run schema enforcement deferred to story 2.x. [`src/lib/storage/localstorage-backend.ts:199-245`] — deferred, pre-existing
+- [x] [Review][Defer] `archiveRun` unbounded run archive growth — future quota concern, not in scope for story 1.2. [`src/lib/storage/localstorage-backend.ts:227`] — deferred, pre-existing
+- [x] [Review][Defer] No item count cap on `Template.items` — no story 1.x requirement for this limit. [`src/lib/schemas/template.ts`] — deferred, pre-existing
+- [x] [Review][Defer] `size-limit` glob captures only nodes 0–2 — nodes for future routes (3+) not included; will need updating as routes grow. [`.size-limit.json`] — deferred, pre-existing
+- [x] [Review][Defer] `_resetForTests` exported from production modules — common SvelteKit test seam pattern; acceptable trade-off. [`src/lib/state/template-store.svelte.ts:77`, `src/lib/state/toast-store.svelte.ts:38`] — deferred, pre-existing
 
 ## Dev Notes
 

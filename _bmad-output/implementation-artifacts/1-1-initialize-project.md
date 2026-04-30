@@ -1,6 +1,6 @@
 # Story 1.1: Initialize project with CI bundle gate and deploy pipeline
 
-Status: review
+Status: done
 
 ## Story
 
@@ -128,6 +128,11 @@ so that every subsequent feature story builds on a known-good foundation that al
 - [x] **Task 9: Verify the full pipeline locally.** (AC: all)
   - [x] Run, in order, and confirm each passes: `pnpm exec svelte-check`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm size-limit`.
   - [x] Open `build/index.html` (or `pnpm preview`) and confirm the redirect lands at `/templates` with the placeholder heading.
+
+### Review Findings
+
+- [x] [Review][Decision] CI workflow also triggers on `push: branches: [main]` — AC #5 specifies PR trigger only; push-to-main trigger causes CI to run twice on every mainline commit (once via ci.yml push, once implicitly during deploy). **Decision: keep** — intentional safety net. [`.github/workflows/ci.yml`]
+- [x] [Review][Defer] deploy.yml contains `<project-name>` placeholder — explicitly documented in completion notes as expected; deploys will fail until secrets/project configured out-of-band. [`.github/workflows/deploy.yml`] — deferred, pre-existing
 
 ## Dev Notes
 
